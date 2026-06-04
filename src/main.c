@@ -8,7 +8,7 @@
 #include "alarm.h"
 #include "password.h"
 #include "pin_connections.h"
-#include "adc2.h"
+#include "adc.h"
 // --------------------------------------------------
 
 int i,j;
