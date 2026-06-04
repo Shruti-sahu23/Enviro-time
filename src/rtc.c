@@ -4,7 +4,7 @@
 #include "keypad.h"
 #include "delays.h"
 #include "alarm.h"
-#include "input2.h"
+#include "input.h"
 #include "pin_connections.h"
 
 // --------------------------------------------------
