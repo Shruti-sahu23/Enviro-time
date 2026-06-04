@@ -1,6 +1,6 @@
 #include <LPC21xx.h>
 
-#include "input2.h"
+#include "input.h"
 #include "lcd.h"
 #include "lcd_defines.h"
 #include "keypad.h"
