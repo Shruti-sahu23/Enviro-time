@@ -1,4 +1,4 @@
-#include "input2.h"
+#include "input.h"
 #include <LPC21xx.h>
 
 #include "password.h"
