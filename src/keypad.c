@@ -1,3 +1,32 @@
+/******************************************************************************
+ * File Name    : keypad.c
+ * Project      : EnviroTime
+ * Target MCU   : LPC2148
+ *
+ * Description:
+ * This file implements the 4x4 matrix keypad interface used in
+ * the EnviroTime project.
+ *
+ * Features:
+ * - Keypad initialization
+ * - Matrix keypad scanning
+ * - Key press detection
+ * - Key release detection
+ * - Software debouncing
+ *
+ * Hardware Connections:
+ * Rows    -> P1.16 to P1.19
+ * Columns -> P1.20 to P1.23
+ *
+ * Keypad Layout:
+ *
+ *  7   8   9   /
+ *  4   5   6   *
+ *  1   2   3   -
+ *  C   0   =   +
+ *
+ ******************************************************************************/
+
 #include <LPC21xx.h>
 #include "types.h"
 #include "delays.h"
@@ -6,6 +35,10 @@
 
 
 // Keypad LUT
+// --------------------------------------------------
+// Lookup table used to map row-column positions
+// to corresponding keypad characters.
+// --------------------------------------------------
 char kpmLUT[4][4] = {
     {'7','8','9','/'},
     {'4','5','6','*'},
@@ -14,6 +47,18 @@ char kpmLUT[4][4] = {
 };
 
 // Initialize keypad
+// --------------------------------------------------
+// InitKPM()
+//
+// Configures keypad interface.
+//
+// Rows:
+// Configured as outputs and driven HIGH during
+// idle condition.
+//
+// Columns:
+// Configured as inputs for key detection.
+// --------------------------------------------------
 void InitKPM(void)
 {
     // Rows as OUTPUT
@@ -26,11 +71,31 @@ void InitKPM(void)
     IOSET1 = ROW_MASK;
 }
 
+
 // Scan keypad
+// --------------------------------------------------
+// KeyScan()
+//
+// Scans all rows and columns of the keypad to
+// determine whether a key is pressed.
+//
+// Working Principle:
+// 1. Drive one row LOW at a time.
+// 2. Read all column inputs.
+// 3. If a column becomes LOW, determine the
+//    corresponding key using the lookup table.
+// 4. Apply software debounce before confirming.
+//
+// Returns:
+// Key character if pressed.
+// 0 if no key is detected.
+// --------------------------------------------------
 char KeyScan(void)
 {
     u8 row, col;
-
+		
+		// Activate each row sequentially and check
+		// all column lines for a key press.
     for(row = 0; row < 4; row++)
     {
         IOSET1 = ROW_MASK;
@@ -39,7 +104,10 @@ char KeyScan(void)
 
         for(col = 0; col < 4; col++)
         {
-            if(!(IOPIN1 & (1 << (20 + col))))
+          // Active LOW key detection.
+					// A pressed key connects the active row to
+					// the corresponding column.  
+					if(!(IOPIN1 & (1 << (20 + col))))
             {
                 delay_ms(20);
 
@@ -54,11 +122,27 @@ char KeyScan(void)
     return 0;
 }
 
+// --------------------------------------------------
+// GetKey()
+//
+// Waits for a complete key press event.
+//
+// Features:
+// 1. Waits until a key is pressed.
+// 2. Performs debounce delay.
+// 3. Waits until the key is released.
+// 4. Returns the detected key.
+//
+// Alarm_Task() is continuously executed while
+// waiting so that alarm functionality remains
+// responsive even during keypad operations.
+// --------------------------------------------------
 char GetKey(void)
 {
     char key = 0;
 
     // WAIT FOR PRESS
+	// Wait until the user presses a key.
     while(key == 0)
     {
         Alarm_Task();
@@ -69,6 +153,8 @@ char GetKey(void)
     delay_ms(20);
 
     // WAIT FOR RELEASE
+		// Wait until the user releases the key.
+		// Prevents multiple detections of a single press.
     while(KeyScan() != 0)
     {
         Alarm_Task();
