@@ -1,3 +1,5 @@
+//LCD commands//
+
 #define CLEAR_LCD 0X01
 #define RET_CUR_HOME 0x02
 #define SHIFT_CUR_RIGHT 0x06
