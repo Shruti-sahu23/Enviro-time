@@ -1,23 +1,59 @@
+/******************************************************************************
+ * File Name    : rtc.c
+ * Project      : EnviroTime
+ * Target MCU   : LPC2148
+ *
+ * Description:
+ * This file implements all Real Time Clock (RTC) related
+ * functionality used in the EnviroTime project.
+ *
+ * Features:
+ * - RTC initialization
+ * - Time display (HH:MM:SS)
+ * - Date display (DD/MM/YYYY)
+ * - Day display (SUN-SAT)
+ * - RTC time/date update
+ * - Input validation for RTC settings
+ *
+ * RTC Hardware:
+ * - Uses LPC2148 internal RTC peripheral.
+ * - RTC runs continuously using backup battery.
+ * - Time is retained even during power failure.
+ *
+ ******************************************************************************/
+
 #include "rtc.h"
 #include "lcd.h"
 #include "lcd_defines.h"
 #include "keypad.h"
 #include "delays.h"
 #include "alarm.h"
-#include "input.h"
+#include "input2.h"
 #include "pin_connections.h"
 
 // --------------------------------------------------
 // RTC MACROS
+// RTC Control Register Bit Definitions
+// --------------------------------------------------
 // --------------------------------------------------
 #define RTC_ENABLE (1<<0)
 #define RTC_RESET  (1<<1)
 //#define RTC_CLKSRC (1<<4)
 
 // --------------------------------------------------
-// DAYS
+// Day Lookup Table
+//
+// DOW Register Mapping:
+// 0 -> SUN
+// 1 -> MON
+// 2 -> TUE
+// 3 -> WED
+// 4 -> THU
+// 5 -> FRI
+// 6 -> SAT
 // --------------------------------------------------
-char     week[][4] =
+
+char week[][4] =
 {
     "SUN",
     "MON",
@@ -28,15 +64,33 @@ char     week[][4] =
     "SAT"
 };
 
+
+
 // --------------------------------------------------
-// RTC INIT
+// RTC_Init()
+//
+// Initializes the LPC2148 RTC peripheral.
+//
+// Steps:
+// 1. Enable RTC power.
+// 2. Reset RTC.
+// 3. Configure RTC prescaler values.
+// 4. Load default time/date values.
+// 5. Start RTC.
+//
+// Note:
+// Default values should only be programmed
+// during first-time setup. If backup battery
+// is connected, RTC data is retained and
+// should not be reinitialized.
 // --------------------------------------------------
 void RTC_Init(void)
 {
-
+				// Enable power to RTC peripheral.
         PCONP|=(1<<9);
         
-					
+				// Configure RTC prescaler for 32.768 kHz clock.
+				// These values generate accurate 1-second timing.
         CCR=0X02;//RESET RTC
         
 				PREINT=0X000001C8;
@@ -57,7 +111,10 @@ void RTC_Init(void)
 	}
 
 // --------------------------------------------------
-// GET TIME
+// GetRTCTimeInfo()
+//
+// Reads current RTC time registers and returns
+// hour, minute and second values.
 // --------------------------------------------------
 void GetRTCTimeInfo(s32 *h, s32 *m, s32 *s)
 {
@@ -67,7 +124,10 @@ void GetRTCTimeInfo(s32 *h, s32 *m, s32 *s)
 }
 
 // --------------------------------------------------
-// DISPLAY TIME
+// DisplayRTCTime()
+//
+// Displays current time in HH:MM:SS format
+// on LCD Line 1.
 // --------------------------------------------------
 void DisplayRTCTime(u32 h, u32 m, u32 s)
 {
@@ -86,7 +146,10 @@ void DisplayRTCTime(u32 h, u32 m, u32 s)
 }
 
 // --------------------------------------------------
-// GET DATE
+// GetRTCDateInfo()
+//
+// Reads current RTC date registers and returns
+// day, month and year values.
 // --------------------------------------------------
 void GetRTCDateInfo(s32 *d, s32 *m, s32 *y)
 {
@@ -96,7 +159,10 @@ void GetRTCDateInfo(s32 *d, s32 *m, s32 *y)
 }
 
 // --------------------------------------------------
-// DISPLAY DATE
+// DisplayRTCDate()
+//
+// Displays current date in DD/MM/YYYY format
+// on LCD Line 2.
 // --------------------------------------------------
 void DisplayRTCDate(u32 d, u32 m, u32 y)
 {
@@ -114,7 +180,9 @@ void DisplayRTCDate(u32 d, u32 m, u32 y)
 }
 
 // --------------------------------------------------
-// SET TIME
+// SetRTCTimeInfo()
+//
+// Updates RTC hour, minute and second registers.
 // --------------------------------------------------
 void SetRTCTimeInfo(u32 h, u32 m, u32 s)
 {
@@ -124,7 +192,14 @@ void SetRTCTimeInfo(u32 h, u32 m, u32 s)
 }
 
 // --------------------------------------------------
-// SET DATE
+// SetRTCDateInfo()
+//
+// Updates RTC date registers.
+//
+// Parameters:
+// d -> Day of month
+// m -> Month
+// y -> Year
 // --------------------------------------------------
 void SetRTCDateInfo(u32 d, u32 m, u32 y)
 {
@@ -134,7 +209,9 @@ void SetRTCDateInfo(u32 d, u32 m, u32 y)
 }
 
 // --------------------------------------------------
-// GET DAY
+// GetRTCDay()
+//
+// Reads current Day Of Week value from RTC.
 // --------------------------------------------------
 void GetRTCDay(s32 *d)
 {
@@ -142,7 +219,10 @@ void GetRTCDay(s32 *d)
 }
 
 // --------------------------------------------------
-// DISPLAY DAY
+// DisplayRTCDay()
+//
+// Displays abbreviated weekday name
+// (SUN to SAT) on LCD.
 // --------------------------------------------------
 void DisplayRTCDay(u32 d)
 {
@@ -152,19 +232,47 @@ void DisplayRTCDay(u32 d)
 }
 
 // --------------------------------------------------
-// SET DAY
+// SetRTCDay()
+//
+// Updates RTC Day Of Week register.
+//
+// Valid Values:
+// 0 -> SUN
+// 1 -> MON
+// 2 -> TUE
+// 3 -> WED
+// 4 -> THU
+// 5 -> FRI
+// 6 -> SAT
 // --------------------------------------------------
 void SetRTCDay(u32 d)
 {
     DOW = d;
 }
 
-// --------------------------------------------------
-// READ 2 DIGITS
-// --------------------------------------------------
 
 // --------------------------------------------------
-// RTC EDIT
+// RTC_Edit()
+//
+// Interactive RTC configuration screen.
+//
+// User can modify:
+// - Hour
+// - Minute
+// - Second
+// - Date
+// - Month
+// - Year
+// - Day Of Week
+//
+// Key Functions:
+// + -> Move cursor forward
+// - -> Move cursor backward
+// C -> Clear all fields
+// = -> Save updated values
+//
+// All entered values are validated before
+// updating RTC registers.
 // --------------------------------------------------
 void RTC_Edit(void)
 {
@@ -174,6 +282,9 @@ void RTC_Edit(void)
     char dateStr[11];
     char dayStr[2];
 
+		// Editable character positions within
+		// time/date entry screen.
+		// Cursor skips ':' and '/' characters.
     u8 positions[] =
     {
         0,1,3,4,6,7,
@@ -235,18 +346,21 @@ void RTC_Edit(void)
 
         key = GetKey();
 
+				// Move editing cursor to next editable field.
         if(key == '+')
         {
             if(index < 14)
                 index++;
         }
-
+				
+				// Move editing cursor to previous editable field.
         else if(key == '-')
         {
             if(index > 0)
                 index--;
         }
 
+				// Clear all editable fields and reset cursor.
         else if(key == 'C')
         {
             timeStr[0]='0';
@@ -273,7 +387,9 @@ void RTC_Edit(void)
 
             index = 0;
         }
-
+				
+				// Convert entered ASCII characters into
+				// numeric time/date values and validate.
         else if(key == '=')
         {
             u8 hh,mm,ss,dd,mon,day;
@@ -293,6 +409,22 @@ void RTC_Edit(void)
 
             day=dayStr[0]-'0';
 
+						// Validate entered RTC parameters.
+						//
+						// Time:
+						// HH -> 00-23
+						// MM -> 00-59
+						// SS -> 00-59
+						//
+						// Date:
+						// DD -> 01-31
+						// MM -> 01-12
+						//
+						// Day:
+						// 0-6
+						//
+						// Year:
+						// 2000-2099
             if((hh>23 || mm>59||ss>59|| (dd<1||dd>31)||(mon<1||mon>12)||(day>6))||(yy<2000 ||yy>2099))
 						{
 							IOSET0=BUZZER;
@@ -309,6 +441,7 @@ void RTC_Edit(void)
 							
 							continue;
 						}
+						// Save validated values into RTC registers.
 
             SetRTCTimeInfo(hh,mm,ss);
 
@@ -320,8 +453,8 @@ void RTC_Edit(void)
 
             CmdLCD(CLEAR_LCD);
 
-            LCD_Print(GOTO_LINE1_POS0,
-            "RTC UPDATED");
+						// Notify user that RTC update completed successfully.
+            LCD_Print(GOTO_LINE1_POS0,"RTC UPDATED");
 
             delay_ms(1000);
 
