@@ -54,7 +54,7 @@
 void Init_ADC(void)
 {
     // P0.28 -> AD0.1
-		// Configure P0.28 pin for ADC channel AD0.1.
+	// Configure P0.28 pin for ADC channel AD0.1.
     PINSEL1 &= ~(3 << 24);
     PINSEL1 |=  (1 << 24);
 
@@ -65,7 +65,7 @@ void Init_ADC(void)
         (CLKDIV << CLKDIV_BITS);
 }
 
-
+// ------------------------------------------------
 // Read_ADC()
 //
 // Performs ADC conversion on the selected channel.
@@ -98,9 +98,9 @@ void Read_ADC(u8 chNO, u16 *dVal, f32 *eAR)
 
     // Start ADC conversion.
     ADCR |= (1 << 24);
-
+		
     // Wait until conversion completes.
-		// DONE bit becomes 1 after conversion.
+	// DONE bit becomes 1 after conversion.
     while(((ADDR >> 31) & 1) == 0);
 
     // Extract 10-bit ADC conversion result.
@@ -109,6 +109,6 @@ void Read_ADC(u8 chNO, u16 *dVal, f32 *eAR)
     // Convert ADC count into equivalent voltage.
     *eAR = (*dVal * 3.3f) / 1023.0f;
 
-		// Stop conversion and clear START bits.
+	// Stop conversion and clear START bits.
     ADCR &= ~(7 << 24);
 }
