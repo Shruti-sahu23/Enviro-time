@@ -3,7 +3,7 @@
  * Project      : EnviroTime
  * Target MCU   : LPC2148
  *
- * Description:
+ * Description: 
  * This file implements the alarm management subsystem of the
  * EnviroTime project.
  *
