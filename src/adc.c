@@ -56,13 +56,12 @@ void Init_ADC(void)
     // P0.28 -> AD0.1
 	// Configure P0.28 pin for ADC channel AD0.1.
     PINSEL1 &= ~(3 << 24);
+	//Select ADC functionality for P0.28
     PINSEL1 |=  (1 << 24);
 
     // ADC configuration
-	// Enable ADC and configure ADC clock.
-    ADCR =
-        (1 << PDN_BIT) |
-        (CLKDIV << CLKDIV_BITS);
+	// Enable ADC power and configure ADC clock divider.
+    ADCR = (1 << PDN_BIT) | (CLKDIV << CLKDIV_BITS);
 }
 
 // ------------------------------------------------
