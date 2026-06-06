@@ -86,17 +86,18 @@ char week[][4] =
 // --------------------------------------------------
 void RTC_Init(void)
 {
-				// Enable power to RTC peripheral.
+		// Enable power to RTC peripheral.
         PCONP|=(1<<9);
         
-				// Configure RTC prescaler for 32.768 kHz clock.
-				// These values generate accurate 1-second timing.
+		// Configure RTC prescaler for 32.768 kHz clock.
+		// These values generate accurate 1-second timing.
         CCR=0X02;//RESET RTC
         
-				PREINT=0X000001C8;
+		PREINT=0X000001C8;
         PREFRAC=0X000061C0;
 
         // SET ONLY FIRST TIME
+		//if CMOS battery connections provided no need to set again
         HOUR  = 10;
         MIN   = 48;
         SEC   = 45;
@@ -282,9 +283,9 @@ void RTC_Edit(void)
     char dateStr[11];
     char dayStr[2];
 
-		// Editable character positions within
-		// time/date entry screen.
-		// Cursor skips ':' and '/' characters.
+	// Editable character positions within
+	// time/date entry screen.
+	// Cursor skips ':' and '/' characters.
     u8 positions[] =
     {
         0,1,3,4,6,7,
@@ -346,21 +347,20 @@ void RTC_Edit(void)
 
         key = GetKey();
 
-				// Move editing cursor to next editable field.
+		// Move editing cursor to next editable field.
         if(key == '+')
         {
             if(index < 14)
                 index++;
         }
 				
-				// Move editing cursor to previous editable field.
+		// Move editing cursor to previous editable field.
         else if(key == '-')
         {
             if(index > 0)
                 index--;
         }
-
-				// Clear all editable fields and reset cursor.
+		// Clear all editable fields and reset cursor.
         else if(key == 'C')
         {
             timeStr[0]='0';
@@ -388,8 +388,8 @@ void RTC_Edit(void)
             index = 0;
         }
 				
-				// Convert entered ASCII characters into
-				// numeric time/date values and validate.
+		// Convert entered ASCII characters into
+		// numeric time/date values and validate.
         else if(key == '=')
         {
             u8 hh,mm,ss,dd,mon,day;
@@ -402,46 +402,43 @@ void RTC_Edit(void)
             dd=((dateStr[0]-'0')*10)+(dateStr[1]-'0');
             mon=((dateStr[3]-'0')*10)+(dateStr[4]-'0');
 
-            yy=((dateStr[6]-'0')*1000)+
-               ((dateStr[7]-'0')*100)+
-               ((dateStr[8]-'0')*10)+
-               (dateStr[9]-'0');
+            yy=((dateStr[6]-'0')*1000)+((dateStr[7]-'0')*100)+ ((dateStr[8]-'0')*10)+ (dateStr[9]-'0');
 
             day=dayStr[0]-'0';
 
-						// Validate entered RTC parameters.
-						//
-						// Time:
-						// HH -> 00-23
-						// MM -> 00-59
-						// SS -> 00-59
-						//
-						// Date:
-						// DD -> 01-31
-						// MM -> 01-12
-						//
-						// Day:
-						// 0-6
-						//
-						// Year:
-						// 2000-2099
+			// Validate entered RTC parameters.
+			//
+			// Time:
+			// HH -> 00-23
+			// MM -> 00-59
+			// SS -> 00-59
+			//
+			// Date:
+			// DD -> 01-31
+			// MM -> 01-12
+			//
+			// Day:
+			// 0-6
+			//
+			// Year:
+			// 2000-2099
             if((hh>23 || mm>59||ss>59|| (dd<1||dd>31)||(mon<1||mon>12)||(day>6))||(yy<2000 ||yy>2099))
-						{
-							IOSET0=BUZZER;
-							CmdLCD(CLEAR_LCD);
-							LCD_Print(GOTO_LINE1_POS0,"INVALID DATA");
-							delay_ms(1000);
-							IOCLR0=BUZZER;
-							CmdLCD(CLEAR_LCD);
+				{
+					IOSET0=BUZZER;
+					CmdLCD(CLEAR_LCD);
+					LCD_Print(GOTO_LINE1_POS0,"INVALID DATA");
+					delay_ms(1000);
+					IOCLR0=BUZZER;
+					CmdLCD(CLEAR_LCD);
 							
-							LCD_Print(GOTO_LINE1_POS0,timeStr);
-							LCD_Print(GOTO_LINE2_POS0,dateStr);
-							LCD_Print(GOTO_LINE2_POS0+12,"D:");
-							LCD_Print(GOTO_LINE2_POS0+14,dayStr);
-							
-							continue;
-						}
-						// Save validated values into RTC registers.
+					LCD_Print(GOTO_LINE1_POS0,timeStr);
+					LCD_Print(GOTO_LINE2_POS0,dateStr);
+					LCD_Print(GOTO_LINE2_POS0+12,"D:");
+					LCD_Print(GOTO_LINE2_POS0+14,dayStr);
+					continue;
+				}
+			
+			// Save validated values into RTC registers.
 
             SetRTCTimeInfo(hh,mm,ss);
 
@@ -453,7 +450,7 @@ void RTC_Edit(void)
 
             CmdLCD(CLEAR_LCD);
 
-						// Notify user that RTC update completed successfully.
+			// Notify user that RTC update completed successfully.
             LCD_Print(GOTO_LINE1_POS0,"RTC UPDATED");
 
             delay_ms(1000);
@@ -476,7 +473,6 @@ void RTC_Edit(void)
             else if(p <= 17)
             {
                 dateStr[p-8]=key;
-
                 //LCD_Print(GOTO_LINE2_POS0,dateStr);
                 CmdLCD(GOTO_LINE2_POS0+(p-8));
                 CharLCD(key);
@@ -484,11 +480,11 @@ void RTC_Edit(void)
             else
             {
                 
-                    dayStr[0]=key;
+                dayStr[0]=key;
 
-                    //LCD_Print(GOTO_LINE2_POS0+14,dayStr);
-                    CmdLCD(GOTO_LINE2_POS0+14);
-                    CharLCD(key);
+                //LCD_Print(GOTO_LINE2_POS0+14,dayStr);
+                CmdLCD(GOTO_LINE2_POS0+14);
+                CharLCD(key);
                 
                 
             }
