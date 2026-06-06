@@ -44,14 +44,18 @@
 // --------------------------------------------------
 void WriteLCD(u8 byte)
 {
+    //clear prev data on LCD lines
     IOCLR0 = (0xFF << LCD_DATA);
 
+    //Put new byte on LCD Bus
     IOSET0 = (byte << LCD_DATA);
 
+    //Generate enable pulse
     IOSET0 = (1 << LCD_EN);
 
     delay_us(1);
 
+    //Complete enable pulse
     IOCLR0 = (1 << LCD_EN);
 
     delay_ms(2);
@@ -67,8 +71,10 @@ void WriteLCD(u8 byte)
 // --------------------------------------------------
 void CmdLCD(u8 cmd)
 {
+    //Select command register
     IOCLR0 = 1 << LCD_RS;
 
+    //Send Command to LCD
     WriteLCD(cmd);
 }
 
@@ -79,17 +85,20 @@ void CmdLCD(u8 cmd)
 // --------------------------------------------------
 void InitLCD(void)
 {
+    //configure LCD Data pins as outputs
     WRITEBYTE(IODIR0, LCD_DATA, 0xFF);
 
+    //Configure RS,RW and EN pins as output
     SETBIT(IODIR0, LCD_RS);
     SETBIT(IODIR0, LCD_RW);
     SETBIT(IODIR0, LCD_EN);
 
+    //LCD power-up delay
     delay_ms(20);
-    CmdLCD(0x38);
-    CmdLCD(0x0C);
-    CmdLCD(0x01);
-    CmdLCD(0x06);
+    CmdLCD(0x38);//Function set:MODE_8BIT_2LINE
+    CmdLCD(0x0C);//Command: DSP_ON_CUR_OFF
+    CmdLCD(0x01);//Command: CLEAR_LCD
+    CmdLCD(0x06);//Command: SHIFT_CUR_RIGHT 
 }
 
 // --------------------------------------------------
@@ -99,7 +108,10 @@ void InitLCD(void)
 // --------------------------------------------------
 void CharLCD(u8 asciiVal)
 {
+    //Select Data Reg
     IOSET0 = 1 << LCD_RS;
+
+    //Send ASCII character to LCD
     WriteLCD(asciiVal);
 }
 
@@ -111,6 +123,7 @@ void CharLCD(u8 asciiVal)
 // --------------------------------------------------
 void StrLCD(char *s)
 {
+    //Display chars until string ends
     while(*s)
     {
         CharLCD(*s++);
@@ -125,22 +138,24 @@ void StrLCD(char *s)
 void U32LCD(u32 n)
 {
     s32 i = 0;
-
     u8 a[10];
 
+    //Special case for zero
     if(n == 0)
     {
         CharLCD('0');
         return;
     }
 
+    //Extract digits from number
     while(n > 0)
     {
+        //store digits in reverse order
         a[i++] = (n % 10) + '0';
-
         n /= 10;
     }
 
+    //Display digits in correct order
     for(i = i - 1; i >= 0; i--)
     {
         CharLCD(a[i]);
@@ -155,13 +170,16 @@ void U32LCD(u32 n)
 // --------------------------------------------------
 void S32LCD(s32 n)
 {
+    //Display negative sign if number is negative
     if(n < 0)
     {
         CharLCD('-');
-
+        
+        //make number positive
         n = -n;
     }
 
+    //Display magnitude of number
     U32LCD(n);
 }
 
@@ -178,26 +196,33 @@ void F32LCD(f32 fn,u8 nDP)
 {
     u32 n,i;
 
+    //Display sign for negative float values
     if(fn < 0.0)
     {
         CharLCD('-');
 
+        //make float number positive
         fn = -fn;
     }
 
+    //store float in integer variable
     n = fn;
 
+    //Display int portion
     U32LCD(n);
 
+    //Display dot(.)
     CharLCD('.');
 
+    //Display fractional digits
     for(i=0;i<nDP;i++)
     {
         fn=(fn-n)*10;
 
         n=fn;
 
-        CharLCD(n+48);
+        // Display decimal digit
+        CharLCD(n+48)
     }
 }
 
@@ -213,11 +238,13 @@ void ClearLineLCD(u8 line)
 {
     u8 i;
 
+    // Position cursor at requested line
     if(line == 1)
         CmdLCD(GOTO_LINE1_POS0);
     else
         CmdLCD(GOTO_LINE2_POS0);
 
+    // Overwrite all characters with spaces
     for(i = 0; i < 16; i++)
     {
         CharLCD(' ');
@@ -231,8 +258,9 @@ void ClearLineLCD(u8 line)
 // --------------------------------------------------
 void LCD_Print(u8 pos, char *str)
 {
+    // Move cursor to requested location
     CmdLCD(pos);
-
+    // Display string
     StrLCD(str);
 }
 
@@ -244,7 +272,7 @@ void LCD_Print(u8 pos, char *str)
 void LCD_ShowStars(u8 count)
 {
     u8 i;
-
+    // Display required number of stars
     for(i=0;i<count;i++)
     {
         CharLCD('*');
