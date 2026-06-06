@@ -36,7 +36,7 @@
 #include<string.h>
 #include "pin_connections.h"
 
-//
+//define MODE_RTC as 0
 #define MODE_RTC  0
 
 //Indicates whether an alarm is currently active
