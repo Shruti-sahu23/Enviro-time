@@ -48,33 +48,39 @@
 // --------------------------------------------------
 u8 InputDigits(char *msg, u8 *buf, u8 digits)
 {
+	//current pos within input buffer
     u8 idx = 0;
 
+	//Stores keypad key value
     char key;
 
-		// Continuously display prompt and wait for
-		// keypad input until valid data is entered.
+	// Continuously display prompt and wait for keypad input until valid data is entered.
     while(1)
     {
         u8 i;
+
+		//Clear both lines of LCD
         ClearLineLCD(1);
         ClearLineLCD(2);
 
+		//Display prompt message
         LCD_Print(GOTO_LINE1_POS0, msg);
+        
+		CmdLCD(GOTO_LINE2_POS0);
 
-        CmdLCD(GOTO_LINE2_POS0);
-
+		//Re display all previously entered digits
         for(i=0;i<idx;i++)
         {
             CharLCD(buf[i]);
         }
 
+		//wait for keypad input
         key = GetKey();
-
-        // DIGIT
-				// Accept numeric digit if buffer is not full.
+		
+		// Accept numeric digit if buffer is not full.
         if((key >= '0') && (key <= '9'))
-                {
+        {	
+			//store digits if buffer still has space
             if(idx < digits)
             {
                 buf[idx++] = key;
@@ -82,7 +88,7 @@ u8 InputDigits(char *msg, u8 *buf, u8 digits)
         }
 
         // CLEAR / BACKSPACE
-				// Remove previously entered digit.
+		// Remove previously entered digit.
         else if(key == 'C')
         {
             if(idx > 0)
@@ -92,14 +98,13 @@ u8 InputDigits(char *msg, u8 *buf, u8 digits)
         }
 
         // ENTER
-				// Accept input only when the required number
-				// of digits has been entered.
+		// Accept input only when the required number of digits has been entered.
         else if(key == '=')
         {
             if(idx == digits)
             {
+				//store last value as null
                 buf[idx] = '\0';
-
                 return 1;
             }
         }
