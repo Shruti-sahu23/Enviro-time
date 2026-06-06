@@ -46,7 +46,6 @@ char kpmLUT[4][4] = {
     {'C','0','=','+'}
 };
 
-// Initialize keypad
 // --------------------------------------------------
 // InitKPM()
 //
@@ -71,8 +70,6 @@ void InitKPM(void)
     IOSET1 = ROW_MASK;
 }
 
-
-// Scan keypad
 // --------------------------------------------------
 // KeyScan()
 //
@@ -94,31 +91,34 @@ char KeyScan(void)
 {
     u8 row, col;
 		
-		// Activate each row sequentially and check
-		// all column lines for a key press.
+	// Activate each row sequentially and check all column lines for a key press.
     for(row = 0; row < 4; row++)
     {
+		//Keep all rows HIGH before scanning
         IOSET1 = ROW_MASK;
 
+		//Drive current row LOW
         IOCLR1 = (1 << (16 + row));
 
+		//Check all columns for key press
         for(col = 0; col < 4; col++)
         {
-          // Active LOW key detection.
-					// A pressed key connects the active row to
-					// the corresponding column.  
-					if(!(IOPIN1 & (1 << (20 + col))))
-            {
-                delay_ms(20);
+          	// Active LOW key detection.
+			// A pressed key connects the active row to the corresponding column.  
+			if(!(IOPIN1 & (1 << (20 + col))))
+            	{
+                	delay_ms(20);
 
+				//confirm key still pressed after debounce
                 if(!(IOPIN1 & (1 << (20 + col))))
                 {
+					//return corresponding char from LUT
                     return kpmLUT[row][col];
                 }
             }
         }
     }
-
+	//No key detected
     return 0;
 }
 
@@ -145,23 +145,25 @@ char GetKey(void)
 	// Wait until the user presses a key.
     while(key == 0)
     {
+		//Continue alarm monitoring while waiting
         Alarm_Task();
-
+		//scan if key detected
         key = KeyScan();
     }
-
+	//debounce delay after key press
     delay_ms(20);
 
     // WAIT FOR RELEASE
-		// Wait until the user releases the key.
-		// Prevents multiple detections of a single press.
+	// Wait until the user releases the key.
+	// Prevents multiple detections of a single press.
     while(KeyScan() != 0)
     {
+		//Continue alarm monitoring 
         Alarm_Task();
     }
 
     delay_ms(20);
-
+	//return the key value
     return key;
 }
 
